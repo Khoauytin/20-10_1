@@ -1,0 +1,12 @@
+# Cấu hình máy chủ xem thử cục bộ
+.claude/
+
+# Ảnh còn sót từ bản thử dùng hoa/mây thật, trang hiện không dùng
+assets/sky.webp
+assets/field.webp
+assets/flowers/*
+!assets/flowers/bfGreen.webp
+!assets/flowers/bfPink.webp
+!assets/flowers/bfBlue.webp
+!assets/flowers/bee1.webp
+!assets/flowers/bee2.webp

@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#86c8ef">
+<title>Vườn hoa 20/10</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@500;700&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#6b4a3f;--paper:#fffaf1;--rose:#df5f88;--rose-soft:rgba(223,95,136,.14)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html,body{margin:0;height:100%;overflow:hidden;background:#9bd3f1;font-family:'Lora',Georgia,'Times New Roman',serif;color:var(--ink);overscroll-behavior:none;-webkit-user-select:none;user-select:none}
+#stage{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+
+/* Hướng dẫn thao tác (hiện một lúc rồi ẩn) */
+#tip{position:fixed;left:50%;z-index:6;bottom:calc(env(safe-area-inset-bottom) + 86px);transform:translate(-50%,10px);width:max-content;max-width:calc(100vw - 32px);
+  padding:10px 18px;border-radius:20px;background:rgba(255,255,255,.86);color:#9c3d60;font-size:clamp(13px,3.7vw,15px);text-align:center;line-height:1.4;
+  box-shadow:0 4px 18px rgba(120,60,80,.2);opacity:0;pointer-events:none;transition:opacity .7s ease,transform .7s ease}
+#tip.show{opacity:1;transform:translate(-50%,0)}
+body.letter-open #tip{opacity:0}
+
+/* Màn hình chạm để bắt đầu */
+#intro{position:fixed;inset:0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;
+  padding:24px 24px calc(env(safe-area-inset-bottom) + 12vh);text-align:center;cursor:pointer;transition:opacity 1.1s ease}
+#intro.hide{opacity:0;pointer-events:none}
+#intro .hint{padding:13px 26px;border-radius:999px;background:rgba(255,255,255,.82);color:#c24a73;font-size:clamp(15px,4.2vw,18px);font-weight:500;
+  box-shadow:0 6px 24px rgba(214,90,130,.28);opacity:0;transform:translateY(6px);transition:opacity .8s ease,transform .8s ease;animation:pulse 2.2s ease-in-out infinite}
+#intro.ready .hint{opacity:1;transform:none}
+@keyframes pulse{0%,100%{box-shadow:0 6px 24px rgba(214,90,130,.28)}50%{box-shadow:0 6px 34px rgba(214,90,130,.55)}}
+
+/* Nút nhạc, nút mở lại thư */
+.fab{position:fixed;z-index:6;border:0;cursor:pointer;color:#c24a73;background:rgba(255,255,255,.85);box-shadow:0 4px 18px rgba(120,60,80,.22);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);font:inherit}
+#mute{top:calc(env(safe-area-inset-top) + 14px);right:14px;width:44px;height:44px;border-radius:50%;font-size:20px;line-height:1}
+#reopen{left:50%;bottom:calc(env(safe-area-inset-bottom) + 24px);transform:translate(-50%,16px);padding:13px 26px;border-radius:999px;font-size:16px;font-weight:500;
+  opacity:0;pointer-events:none;transition:opacity .5s ease,transform .5s ease;white-space:nowrap}
+#reopen.show{opacity:1;pointer-events:auto;transform:translate(-50%,0)}
+.fab:active{filter:brightness(.96)}
+
+/* Bức thư */
+#letter{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;perspective:1300px;
+  padding:calc(env(safe-area-inset-top) + 16px) 16px calc(env(safe-area-inset-bottom) + 16px);
+  background:rgba(86,46,64,0);visibility:hidden;opacity:0;transition:opacity .6s ease,background .6s ease,visibility 0s .6s}
+#letter.open{visibility:visible;opacity:1;background:rgba(86,46,64,.38);transition:opacity .6s ease,background .6s ease,visibility 0s}
+.card{position:relative;width:min(100%,440px);max-height:100%;overflow:auto;-webkit-overflow-scrolling:touch;padding:50px 30px 36px;border-radius:10px;
+  background:radial-gradient(120% 80% at 50% 0%,#fffdf8 0%,var(--paper) 60%,#f8eddb 100%);
+  box-shadow:0 24px 70px rgba(70,30,50,.4),inset 0 0 0 1px rgba(224,160,150,.35);
+  transform-origin:50% 100%;transform:translateY(70px) scale(.9) rotateX(-28deg);transition:transform .95s cubic-bezier(.2,.9,.25,1.08);-webkit-user-select:text;user-select:text}
+.card::before{content:"";position:absolute;inset:8px;border:1px solid rgba(223,95,136,.28);border-radius:6px;pointer-events:none}
+#letter.open .card{transform:none}
+.close{position:absolute;top:12px;right:12px;width:42px;height:42px;border-radius:50%;border:0;background:var(--rose-soft);color:var(--rose);font-size:20px;line-height:1;cursor:pointer;z-index:2}
+.card h2{margin:0 0 18px;font-family:'Dancing Script',cursive;font-weight:700;font-size:clamp(28px,8vw,36px);color:#cf4f78;line-height:1.2}
+.card p{margin:0 0 14px;font-size:clamp(16px,4.3vw,18px);line-height:1.75}
+.card .sign{margin-top:22px;text-align:right;font-family:'Dancing Script',cursive;font-size:clamp(22px,6vw,26px);color:#cf4f78}
+.ln{opacity:0;transform:translateY(10px);transition:opacity .9s ease,transform .9s ease}
+#letter.open .ln{opacity:1;transform:none;transition-delay:calc(var(--i) * .4s + .7s)}
+</style>
+</head>
+<body>
+<canvas id="stage"></canvas>
+
+<div id="intro" role="button" aria-label="Chạm để mở quà">
+  <div class="hint">Chạm để mở quà 🌸</div>
+</div>
+
+<div id="tip" role="status"></div>
+
+<button class="fab" id="mute" hidden aria-label="Bật/tắt nhạc">🔊</button>
+<button class="fab" id="reopen" aria-label="Mở lại thư">💌 Mở thư</button>
+
+<div id="letter" aria-hidden="true">
+  <article class="card" role="dialog" aria-label="Bức thư">
+    <button class="close" id="closeLetter" aria-label="Đóng thư">✕</button>
+    <h2 class="ln" id="ltTitle" style="--i:0"></h2>
+    <div id="ltBody"></div>
+    <p class="sign ln" id="ltSign"></p>
+  </article>
+</div>
+
+<script>
+(() => {
+'use strict';
+
+/* ============ NỘI DUNG DỄ SỬA ============ */
+const CONFIG = {
+  musicSrc: 'music.mp3',            // đặt file nhạc cạnh index.html; để '' nếu không dùng nhạc
+  letterDelayAfterBloom: 5000,      // ms chờ sau khi cả vườn nở xong thì thư tự mở
+  zoomOutPhone: 0.6,               // mức thu nhỏ tối đa trên điện thoại (màn hình dọc), càng nhỏ thấy càng rộng
+  zoomOutWide: 0.75,                // mức thu nhỏ tối đa trên màn hình ngang
+  zoomIn: 1.5,                      // mức phóng to tối đa
+  tipTouch: 'Chạm vào hoa · Chụm 2 ngón để thu phóng',
+  tipMouse: 'Bấm vào hoa · Cuộn chuột để thu phóng',
+  letter: {
+    title: 'Gửi người phụ nữ thương yêu,',
+    paragraphs: [
+      'Nhân ngày 20/10, anh xin gửi tặng vợ Ngọc Anh cả một vườn hoa. Mỗi đóa là một lời cảm ơn cho những yêu thương thầm lặng vợ đã trao đi.',
+      'Chúc vợ luôn rạng rỡ, bình yên và được yêu thương thật nhiều.'
+    ],
+    sign: 'Với tất cả yêu thương'
+  }
+};
+
+/* ============ TIỆN ÍCH ============ */
+const $ = s => document.querySelector(s);
+const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const easeOut = t => 1 - Math.pow(1 - t, 3);
+const easeOutBack = t => { const c1 = 1.5, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); };
+const mulberry = a => () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+const hex2 = h => { const n = parseInt(h.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; };
+const toHex = a => '#' + a.map(v => Math.round(clamp(v, 0, 255)).toString(16).padStart(2, '0')).join('');
+const mix = (a, b, t) => { const A = hex2(a), B = hex2(b); return toHex(A.map((v, i) => v + (B[i] - v) * t)); };
+
+const cv = $('#stage'), ctx = cv.getContext('2d');
+let W = 0, H = 0, DPR = 1, U = 0;
+let T = 0, t0 = 0, started = false, bloomEnd = 8;
+let skyG, groundG;
+
+/* ============ BẢNG MÀU HOA ============ */
+const PAL = {
+  pink:   ['#ffc4d3', '#f98fb0', '#dd5f86'],
+  rose:   ['#ffb7ca', '#f8789d', '#d44a74'],
+  peach:  ['#ffdcbf', '#fab88e', '#e68b5d'],
+  orange: ['#ffd2a6', '#f7a86d', '#e07d44'],
+  green:  ['#e8f4c8', '#c6e19b', '#98c06c'],
+  blue:   ['#d6e9f9', '#9fc8ec', '#6ea2d3'],
+  white:  ['#fffaf3', '#ece6dc', '#cdc5b8']
+};
+const PICK = ['pink','pink','pink','peach','peach','orange','green','green','blue','blue','white'];
+const BUD_PICK = ['blue', 'orange', 'pink', 'white', 'peach'];
+
+/* ============ VẼ SPRITE ============ */
+function newCanvas(w, h) { const c = document.createElement('canvas'); c.width = Math.ceil(w); c.height = Math.ceil(h); return c; }
+
+function makeRose(pal, R, seed) {
+  const rnd = mulberry(seed), q = Math.min(DPR * 1.5, 3), pad = 7;   // nét hơn màn hình để phóng to vẫn rõ
+  const c = newCanvas((2 * R + 2 * pad) * q, (2 * R + 2 * pad) * q);
+  const g = c.getContext('2d');
+  g.setTransform(q, 0, 0, q, 0, 0);
+  g.translate(R + pad, R + pad);
+  g.lineJoin = 'round';
+  const L = 12 + (rnd() * 3 | 0);
+  const toneAt = f => f < 0.55 ? mix(pal[0], pal[1], f / 0.55) : mix(pal[1], pal[2], (f - 0.55) / 0.45 * 0.8);
+  for (let i = 0; i < L; i++) {
+    const f = i / (L - 1);
+    const rad = R * (1 - f * 0.88) * (0.96 + rnd() * 0.04);
+    // Cánh giấy: đa giác ít đỉnh, bo góc nhẹ, mỗi lớp xoay lệch nhau
+    const n = 5 + (i % 3), rot = i * 2.399 + rnd() * 0.6, pts = [];
+    for (let k = 0; k < n; k++) {
+      const a = rot + (k + (rnd() - 0.5) * 0.35) / n * 6.283, rr = rad * (0.8 + rnd() * 0.2);
+      pts.push([Math.cos(a) * rr, Math.sin(a) * rr]);
+    }
+    const p = new Path2D(), corner = rad * 0.16;
+    const mid = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+    const s0 = mid(pts[n - 1], pts[0]);
+    p.moveTo(s0[0], s0[1]);
+    for (let k = 0; k < n; k++) {
+      const p1 = pts[k], m = mid(p1, pts[(k + 1) % n]);
+      p.arcTo(p1[0], p1[1], m[0], m[1], corner);
+    }
+    p.closePath();
+    const tone = toneAt(f);
+    const gr = g.createRadialGradient(0, 0, rad * 0.2, 0, 0, rad);
+    gr.addColorStop(0, mix(tone, pal[2], 0.2));
+    gr.addColorStop(1, mix(tone, '#ffffff', 0.24));
+    g.shadowColor = 'rgba(70,25,40,.28)';
+    g.shadowBlur = R * 0.05 * q;
+    g.shadowOffsetY = R * 0.012 * q;
+    g.fillStyle = gr;
+    g.fill(p);
+    g.shadowColor = 'transparent';
+    g.lineWidth = Math.max(0.6, R * 0.011);
+    g.strokeStyle = mix(pal[2], '#000000', 0.3);
+    g.globalAlpha = 0.4;
+    g.stroke(p);
+    g.save(); g.scale(0.9, 0.9);
+    g.strokeStyle = '#ffffff'; g.globalAlpha = 0.3;
+    g.stroke(p);
+    g.restore();
+    g.globalAlpha = 1;
+  }
+  g.strokeStyle = mix(pal[2], '#000000', 0.25);
+  g.lineWidth = Math.max(0.6, R * 0.014);
+  for (let arm = 0; arm < 2; arm++) {
+    g.beginPath();
+    for (let a = 0; a <= 6.5 * Math.PI; a += 0.2) {
+      const r = a / (6.5 * Math.PI) * R * 0.3;
+      const x = Math.cos(a + arm * Math.PI) * r, y = Math.sin(a + arm * Math.PI) * r;
+      if (a) g.lineTo(x, y); else g.moveTo(x, y);
+    }
+    g.globalAlpha = 0.5; g.stroke();
+  }
+  g.globalAlpha = 1;
+  return { c, R, pad };
+}
+
+function makeLeaf() {
+  const c = newCanvas(112 * DPR, 58 * DPR), g = c.getContext('2d');
+  g.setTransform(DPR, 0, 0, DPR, 0, 0);
+  const gr = g.createLinearGradient(0, 4, 0, 54);
+  gr.addColorStop(0, '#86c25f'); gr.addColorStop(1, '#3f8040');
+  g.beginPath();
+  g.moveTo(2, 29); g.bezierCurveTo(26, 3, 72, 3, 104, 29); g.bezierCurveTo(72, 55, 26, 55, 2, 29);
+  g.fillStyle = gr; g.fill();
+  g.strokeStyle = 'rgba(255,255,255,.38)'; g.lineWidth = 1.4;
+  g.beginPath(); g.moveTo(4, 29); g.quadraticCurveTo(50, 27, 98, 29); g.stroke();
+  return c;
+}
+
+function makeCloud(w, h, seed) {
+  const rnd = mulberry(seed), c = newCanvas(w * DPR, h * DPR), g = c.getContext('2d');
+  g.setTransform(DPR, 0, 0, DPR, 0, 0);
+  for (let i = 0; i < 10; i++) {
+    const x = w * (0.14 + 0.72 * rnd()), y = h * (0.5 + 0.18 * rnd() - 0.12 * Math.sin(x / w * Math.PI));
+    const r = h * (0.3 + 0.22 * rnd());
+    const gr = g.createRadialGradient(x, y, 0, x, y, r);
+    gr.addColorStop(0, 'rgba(255,255,255,.95)'); gr.addColorStop(0.6, 'rgba(255,255,255,.55)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = gr; g.fillRect(x - r, y - r, 2 * r, 2 * r);
+  }
+  return c;
+}
+
+let sprites = {}, heroSpr = null, leafSpr = null, cloudSprs = [], spriteU = 0, spriteDPR = 0;
+function buildSprites() {
+  const R = U * 0.215;
+  sprites = {};
+  for (const k of ['pink', 'peach', 'orange', 'green', 'blue', 'white']) {
+    const h = k.length * 131 + k.charCodeAt(0) * 17;
+    sprites[k] = [makeRose(PAL[k], R, h + 1), makeRose(PAL[k], R, h + 97)];
+  }
+  heroSpr = makeRose(PAL.rose, U * 0.31, 777);
+  leafSpr = makeLeaf();
+  cloudSprs = [makeCloud(320, 120, 5), makeCloud(300, 110, 11), makeCloud(340, 120, 23)];
+  spriteU = U; spriteDPR = DPR;
+}
+
+function drawRose(spr, x, y, r, rot, alpha) {
+  const k = r / spr.R, s = spr.R + spr.pad;
+  ctx.save();
+  ctx.translate(x, y); ctx.rotate(rot); ctx.scale(k, k);
+  ctx.globalAlpha = alpha;
+  ctx.drawImage(spr.c, -s, -s, 2 * s, 2 * s);
+  ctx.restore();
+}
+
+function drawBud(x, y, s, rot, pal, alpha) {
+  ctx.save();
+  ctx.translate(x, y); ctx.rotate(rot); ctx.globalAlpha = alpha;
+  const body = () => {
+    ctx.beginPath();
+    ctx.moveTo(0, -s * 1.5);
+    ctx.bezierCurveTo(s * 0.95, -s * 0.6, s * 0.85, s * 0.7, 0, s * 0.95);
+    ctx.bezierCurveTo(-s * 0.85, s * 0.7, -s * 0.95, -s * 0.6, 0, -s * 1.5);
+  };
+  const gr = ctx.createLinearGradient(-s, 0, s, 0);
+  gr.addColorStop(0, pal[0]); gr.addColorStop(0.55, pal[1]); gr.addColorStop(1, pal[2]);
+  body(); ctx.fillStyle = gr; ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,.45)'; ctx.lineWidth = Math.max(0.6, s * 0.06);
+  ctx.beginPath(); ctx.moveTo(0, -s * 1.4); ctx.quadraticCurveTo(s * 0.18, 0, 0, s * 0.8); ctx.stroke();
+  ctx.fillStyle = '#5ea05a';
+  for (const sd of [-1, 1]) {
+    ctx.beginPath();
+    ctx.moveTo(0, s * 0.98);
+    ctx.quadraticCurveTo(sd * s * 1.25, s * 0.55, sd * s * 0.95, -s * 0.15);
+    ctx.quadraticCurveTo(sd * s * 0.3, s * 0.3, 0, s * 0.98);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+/* ============ BỐ CỤC VƯỜN ============ */
+let flowers = [], sorted = [], clouds = [], petals = [], bursts = [], motes = [], butterflies = [], bees = [];
+
+/* Camera: vườn hoa nằm trong "thế giới" rộng hơn màn hình, thu nhỏ để thấy toàn cảnh.
+   Khung nhìn: màn hình = thế giới * s + (ox, oy). Mặt đất luôn giữ ở đáy màn hình khi thu nhỏ hết cỡ. */
+const cam = { s: 1, ox: 0, oy: 0 };
+let sMin = 0.55, sMax = 1.5, XMIN = 0, XMAX = 0, YMIN = 0;
+function setupWorld() {
+  sMin = W < H ? CONFIG.zoomOutPhone : CONFIG.zoomOutWide;
+  sMax = CONFIG.zoomIn;
+  XMIN = W / 2 - W / (2 * sMin); XMAX = W / 2 + W / (2 * sMin);
+  YMIN = H - H / sMin;
+  cam.s = 1; cam.ox = 0; cam.oy = 0;
+}
+function clampCam() {
+  cam.s = clamp(cam.s, sMin, sMax);
+  const s = cam.s;
+  cam.ox = clamp(cam.ox, W - XMAX * s, -XMIN * s);
+  // thu nhỏ: mặt đất bám đáy màn hình; phóng to: chỉ dịch trong khung cảnh gốc
+  cam.oy = clamp(cam.oy, H - H * s, Math.max(H - H * s, 0));
+}
+function zoomAt(px, py, ns) {
+  const wx = (px - cam.ox) / cam.s, wy = (py - cam.oy) / cam.s;
+  cam.s = clamp(ns, sMin, sMax);
+  cam.ox = px - wx * cam.s; cam.oy = py - wy * cam.s;
+  clampCam();
+}
+const toWorld = (x, y) => ({ x: (x - cam.ox) / cam.s, y: (y - cam.oy) / cam.s });
+
+function layout() {
+  const rnd = mulberry(20102024);
+  flowers = [];
+  const rows = clamp(Math.round(H / 90), 7, 11);
+  const top = W > H ? 0.36 : 0.32;
+  const hero = { hero: true, kind: 'rose', x: W / 2, y: H * 0.43, R: U * 0.31, spr: heroSpr, pal: PAL.rose, delay: 0, dur: 2.2, sortY: H * 0.66, depth: 1 };
+  flowers.push(hero);
+  const cx = W / 2, cy = H * 0.43, maxD = Math.hypot(W / 2, H * 0.6), worldW = XMAX - XMIN;
+  for (let i = 0; i < rows; i++) {
+    const t = i / (rows - 1);
+    const rowY = H * (top + (0.94 - top) * Math.pow(t, 1.15));
+    const baseR = U * (0.062 + 0.115 * t), sp = baseR * 1.5;
+    const n = Math.ceil(worldW / sp) + 1;
+    for (let j = 0; j < n; j++) {
+      const x = XMIN + (j + (i % 2 ? 0.5 : 0) + (rnd() - 0.5) * 0.5) * sp - sp * 0.3;
+      if (x < XMIN - sp * 0.4 || x > XMAX + sp * 0.4) { rnd(); rnd(); rnd(); rnd(); continue; }
+      const y = rowY + (rnd() - 0.5) * H * 0.024;
+      const R = baseR * (0.88 + 0.3 * rnd());
+      const key = PICK[rnd() * PICK.length | 0], v = rnd() < 0.5 ? 0 : 1;
+      const d = Math.min(1.2, Math.hypot(x - cx, (y - cy) * 1.2) / maxD);
+      flowers.push({ kind: 'rose', x, y, R, spr: sprites[key][v], pal: PAL[key], delay: 1.8 + d * 3.6 + rnd() * 0.5, dur: 1.5 + rnd() * 0.4, sortY: y, depth: t });
+    }
+  }
+  const nb = Math.round(clamp(worldW / 26, 10, 50));
+  for (let i = 0; i < nb; i++) {
+    const key = BUD_PICK[rnd() * BUD_PICK.length | 0];
+    const y = H * (0.34 + rnd() * 0.46);
+    flowers.push({ kind: 'bud', x: XMIN + worldW * (0.02 + 0.96 * rnd()), y, R: U * (0.032 + 0.016 * rnd()), pal: PAL[key], delay: 3 + rnd() * 3.5, dur: 1.4, sortY: y + H * 0.08, depth: 0.7 });
+  }
+  for (const f of flowers) {
+    const len = H + 16 - f.y;
+    f.by = H + 16;
+    f.bx = f.x + (rnd() - 0.5) * U * 0.12;
+    f.bend = (rnd() - 0.5) * U * 0.14;
+    f.amp = (f.hero ? 4 : 7) + len * 0.025 + f.R * 0.12;
+    f.sp = 0.9 + rnd() * 0.5; f.ph = rnd() * 6.283;
+    f.sw = f.hero ? Math.max(2.4, U * 0.012) : f.kind === 'bud' ? 1.5 : 1.4 + f.depth * 2.2;
+    f.stemCol = mix(mix('#78a862', '#4f8c4b', f.depth), '#dcebd9', (1 - f.depth) * 0.4);
+    f.alpha = 0.84 + 0.16 * f.depth;
+    f.pulse = 0; f.pv = 0; f.kick = 0; f.hx = -999; f.hy = -999; f.hr = 0; f.openP = 0;
+    const nl = f.hero ? 3 : f.kind === 'bud' ? 1 : 1 + (rnd() < 0.6 ? 1 : 0);
+    f.leaves = [];
+    for (let k = 0; k < nl; k++) f.leaves.push({ u: f.hero ? 0.3 + k * 0.17 : 0.28 + rnd() * 0.5, side: rnd() < 0.5 ? -1 : 1, size: (f.kind === 'bud' ? U * 0.1 : f.R * (f.hero ? 0.9 : 0.8)) + 10, ph: rnd() * 6.283 });
+    if (f.hero) f.leaves.forEach((l, k) => l.side = k % 2 ? 1 : -1);
+  }
+  sorted = flowers.slice().sort((a, b) => a.sortY - b.sortY);
+  bloomEnd = 0;
+  for (const f of flowers) if (!f.hero) bloomEnd = Math.max(bloomEnd, f.delay + f.dur);
+}
+
+function initScene() {
+  const rnd = mulberry(1020);
+  clouds = [];
+  for (let i = 0; i < 5; i++) clouds.push({ x: rnd(), y: 0.03 + rnd() * 0.24, s: 0.55 + rnd() * 0.6, v: 4 + rnd() * 7, spr: i % 3, a: 0.6 + rnd() * 0.3 });
+  const cols = [['#ffb3c6', '#ffd6e0'], ['#ffd2a6', '#fff0d6'], ['#d6e9f9', '#ffffff'], ['#fff3b8', '#ffffff']];
+  petals = [];
+  for (let i = 0; i < 20; i++) petals.push({ x: rnd(), y: -rnd() * 900, vy: 16 + rnd() * 24, sw: 18 + rnd() * 30, sf: 0.6 + rnd() * 0.9, ph: rnd() * 6.283, size: 5 + rnd() * 5, rf: 1 + rnd() * 2, col: cols[i % cols.length] });
+  motes = [];
+  for (let i = 0; i < 22; i++) motes.push({ x: rnd(), y: rnd(), r: 1 + rnd() * 1.8, sp: 3 + rnd() * 6, ph: rnd() * 6.283 });
+  const fl = INSECTS.filter(m => m.id.startsWith('bf')), be = INSECTS.filter(m => m.id.startsWith('bee'));
+  butterflies = [];
+  for (let i = 0; i < 5; i++) butterflies.push({ spr: fl[i % fl.length], cx: 0.5, cy: 0.28 + rnd() * 0.32, ax: 0.32 + rnd() * 0.12, ay: 0.12 + rnd() * 0.08, fx: 0.18 + rnd() * 0.1, fy: 0.26 + rnd() * 0.14, ph: rnd() * 6.283, size: 0.085 + rnd() * 0.03, fs: 6 + rnd() * 2.5, show: 3 + i * 0.7 });
+  bees = [];
+  for (let i = 0; i < 3; i++) bees.push({ spr: be[i % be.length], cy: 0.42 + i * 0.13, ay: 0.035, ax: 0.1, f: 0.8 + i * 0.25, ph: i * 2.1, size: 0.042 + (i % 2) * 0.008, show: 5 + i * 0.7 });
+}
+
+/* ============ BƯỚM, ONG ẢNH THẬT ============ */
+// [id, tâm x, tâm y, bán kính (tỉ lệ theo cạnh lớn), rộng, cao] — ảnh cắt trong assets/flowers
+const INSECTS = [
+  // bướm màu nước nhìn nghiêng, đầu quay sang trái; tâm = gốc cánh
+  ['bfGreen', .386, .747, .5, 272, 320], ['bfPink', .265, .617, .5, 270, 320], ['bfBlue', .505, .823, .5, 320, 243],
+  ['bee1', .5, .481, .569, 58, 52], ['bee2', .496, .373, .539, 115, 75]
+].map(([id, cx, cy, r, w, h]) => {
+  const m = { id, cx, cy, r, w, h, img: null };
+  const im = new Image();
+  im.onload = () => { m.img = im; };
+  im.src = 'assets/flowers/' + id + '.webp';
+  return m;
+});
+
+function drawSprite(m, x, y, R, rot, alpha, flip = 1, sx = 1, sy = 1) {
+  if (!m || !m.img || R <= 0.2) return;
+  const k = R / (m.r * Math.max(m.w, m.h)), dw = m.w * k, dh = m.h * k;
+  ctx.save();
+  ctx.translate(x, y); ctx.rotate(rot); ctx.scale(flip * sx, sy);
+  ctx.globalAlpha = alpha;
+  ctx.drawImage(m.img, -m.cx * dw, -m.cy * dh, dw, dh);
+  ctx.restore();
+}
+
+/* ============ VẼ NỀN ============ */
+function drawBackground(t) {
+  ctx.fillStyle = skyG; ctx.fillRect(0, 0, W, H);
+  const sx = W * 0.86, sy = H * 0.07;
+  ctx.save();
+  ctx.translate(sx, sy);
+  ctx.fillStyle = 'rgba(255,255,255,.07)';
+  for (let k = 0; k < 5; k++) {
+    const a = Math.PI * 0.62 + k * 0.17 + Math.sin(t * 0.15 + k) * 0.03, len = H * 1.3;
+    ctx.beginPath(); ctx.moveTo(0, 0);
+    ctx.lineTo(Math.cos(a - 0.05) * len, Math.sin(a - 0.05) * len);
+    ctx.lineTo(Math.cos(a + 0.05) * len, Math.sin(a + 0.05) * len);
+    ctx.fill();
+  }
+  const gl = ctx.createRadialGradient(0, 0, 0, 0, 0, U * 0.7);
+  gl.addColorStop(0, 'rgba(255,250,220,.85)'); gl.addColorStop(0.25, 'rgba(255,248,215,.4)'); gl.addColorStop(1, 'rgba(255,248,215,0)');
+  ctx.fillStyle = gl; ctx.fillRect(-U, -U, 2 * U, 2 * U);
+  ctx.restore();
+  for (const c of clouds) {
+    const w = 320 * c.s * (U / 390), spr = cloudSprs[c.spr];
+    const x = ((c.x * (W + w) + t * c.v) % (W + w)) - w;
+    ctx.globalAlpha = c.a;
+    ctx.drawImage(spr, x, c.y * H, w, w * 120 / 320);
+  }
+  ctx.globalAlpha = 1;
+}
+
+/* ============ VẼ HOA ============ */
+const wind = (t, x) => Math.sin(t * 0.9 + x * 0.005) * 0.65 + Math.sin(t * 1.9 + x * 0.011 + 1.3) * 0.35;
+
+function drawFlower(f, t, tt, dt) {
+  f.pv += (-120 * f.pulse - 7 * f.pv) * dt; f.pulse += f.pv * dt;
+  f.kick *= Math.exp(-2.2 * dt);
+  let stemP, openP;
+  if (f.hero) { stemP = 1; openP = tt < 0 ? 0 : clamp(tt / 2.4); }
+  else {
+    const a = tt - f.delay;
+    stemP = a <= 0 ? 0 : easeOut(clamp(a / (f.dur * 0.65)));
+    openP = a <= 0 ? 0 : clamp((a - f.dur * 0.4) / (f.dur * 0.6));
+  }
+  f.openP = openP;
+  if (stemP <= 0.001) return;
+  // bỏ qua bông nằm ngoài khung nhìn
+  const reach = f.R * 1.6 + f.amp;
+  if (Math.max(f.x, f.bx) + reach < viewX0 || Math.min(f.x, f.bx) - reach > viewX1) { f.hr = 0; return; }
+  const disp = (wind(t, f.x) * f.amp + f.kick * Math.sin(t * 14 + f.ph) * f.R * 0.4) * stemP;
+  const gy = lerp(f.by, f.y, stemP), gx = lerp(f.bx, f.x, stemP);
+  const hx = gx + disp, hy = gy;
+  const cx = f.bx + (hx - f.bx) * 0.25 + f.bend * stemP, cy = (f.by + hy) / 2;
+
+  ctx.globalAlpha = f.alpha;
+  ctx.strokeStyle = f.stemCol; ctx.lineWidth = f.sw; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(f.bx, f.by); ctx.quadraticCurveTo(cx, cy, hx, hy); ctx.stroke();
+
+  for (const l of f.leaves) {
+    const g = clamp((stemP - l.u * 0.8) / 0.3);
+    if (g <= 0) continue;
+    const u = l.u * stemP, v = 1 - u;
+    const px = v * v * f.bx + 2 * v * u * cx + u * u * hx, py = v * v * f.by + 2 * v * u * cy + u * u * hy;
+    if (py > H + 30) continue;
+    const tx = 2 * v * (cx - f.bx) + 2 * u * (hx - cx), ty = 2 * v * (cy - f.by) + 2 * u * (hy - cy);
+    const ang = Math.atan2(ty, tx) + l.side * 0.85 + Math.sin(t * 1.3 + l.ph) * 0.07;
+    const k = l.size / 104 * easeOut(g);
+    ctx.save(); ctx.translate(px, py); ctx.rotate(ang); ctx.scale(k, k);
+    ctx.globalAlpha = f.alpha;
+    ctx.drawImage(leafSpr, 0, -29, 112, 58);
+    ctx.restore();
+  }
+
+  const ps = 1 + f.pulse * 0.28, rot = disp * 0.008;
+  if (f.kind === 'bud') {
+    const s = f.R * easeOutBack(clamp(openP * 1.2 + 0.0)) * ps;
+    if (openP > 0 || stemP > 0.9) drawBud(hx, hy, Math.max(0.01, f.R * (0.4 + 0.6 * easeOutBack(clamp(openP))) * ps), rot, f.pal, f.alpha * clamp(stemP * 1.2 - 0.2));
+    f.hx = hx; f.hy = hy; f.hr = f.R * 1.6;
+  } else {
+    const o = clamp((openP - 0.0) / 1);
+    const budA = 1 - clamp(o * 5);
+    if (budA > 0.01) drawBud(hx, hy, f.R * 0.28 * (0.7 + 0.3 * clamp(stemP)) * ps, rot, f.pal, f.alpha * budA);
+    const roseA = clamp(o * 4);
+    if (roseA > 0.01) {
+      const r = f.R * (0.3 + 0.7 * easeOutBack(o)) * ps;
+      drawRose(f.spr, hx, hy, r, rot - (1 - o) * 0.9, roseA * f.alpha);
+      f.hx = hx; f.hy = hy; f.hr = r * 0.95;
+    }
+  }
+  ctx.globalAlpha = 1;
+}
+
+/* ============ HẠT, BƯỚM, ONG ============ */
+function drawPetal(x, y, s, rot, flip, col, a) {
+  ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.scale(1, flip); ctx.globalAlpha = a;
+  const gr = ctx.createLinearGradient(0, -s, 0, s);
+  gr.addColorStop(0, col[0]); gr.addColorStop(1, col[1]);
+  ctx.fillStyle = gr;
+  ctx.beginPath(); ctx.moveTo(0, -s); ctx.quadraticCurveTo(s * 0.95, -s * 0.2, 0, s); ctx.quadraticCurveTo(-s * 0.95, -s * 0.2, 0, -s); ctx.fill();
+  ctx.restore();
+}
+
+function drawParticles(t, tt, dt) {
+  const gt = tt - 1.5;
+  for (const p of petals) {
+    if (gt <= 0) break;
+    p.y += p.vy * dt;
+    if (p.y > H + 20) { p.y = -20 - Math.random() * 120; p.x = Math.random(); }
+    if (p.y < -30) continue;
+    const x = p.x * W + Math.sin(t * p.sf + p.ph) * p.sw;
+    drawPetal(x, p.y, p.size, t * p.rf + p.ph, Math.sin(t * 2 + p.ph), p.col, clamp(gt / 2) * 0.9);
+  }
+  ctx.fillStyle = '#fff3b0';
+  for (const m of motes) {
+    if (gt <= 0) break;
+    m.y -= m.sp * dt / H; if (m.y < -0.02) m.y = 1.02;
+    ctx.globalAlpha = (0.25 + 0.35 * Math.sin(t * 1.6 + m.ph)) * clamp(gt / 3);
+    ctx.beginPath(); ctx.arc(m.x * W + Math.sin(t * 0.5 + m.ph) * 12, m.y * H, m.r, 0, 6.283); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+function drawBursts(dt) {
+  for (let i = bursts.length - 1; i >= 0; i--) {
+    const b = bursts[i];
+    b.life -= dt; if (b.life <= 0) { bursts.splice(i, 1); continue; }
+    b.vy += 150 * dt; b.vx *= Math.exp(-1.2 * dt); b.vy *= Math.exp(-0.6 * dt);
+    b.x += b.vx * dt; b.y += b.vy * dt; b.rot += b.vr * dt;
+    drawPetal(b.x, b.y, b.size, b.rot, Math.sin(b.rot * 2), b.col, clamp(b.life / 0.8));
+  }
+}
+
+function bfPos(b, t) {
+  return { x: W * (b.cx + Math.sin(t * b.fx + b.ph) * b.ax + Math.sin(t * b.fx * 2.3 + b.ph * 1.7) * b.ax * 0.25),
+           y: H * (b.cy + Math.sin(t * b.fy + b.ph * 1.3) * b.ay) };
+}
+function drawInsects(t, tt) {
+  for (const b of butterflies) {
+    const a = clamp((tt - b.show) / 1.5);
+    if (a <= 0) continue;
+    const p = bfPos(b, t), p2 = bfPos(b, t - 0.06);
+    const dir = p.x >= p2.x ? -1 : 1;                                 // ảnh quay đầu sang trái
+    const beat = Math.abs(Math.sin(t * b.fs + b.ph));
+    const flap = 0.42 + 0.58 * beat;                                   // cánh gập xuống rồi dựng lên quanh gốc cánh
+    const tilt = Math.sin(t * 1.3 + b.ph) * 0.15 - dir * (p.y - p2.y) * 0.02;
+    drawSprite(b.spr, p.x, p.y - (1 - beat) * 3, U * b.size, tilt, a, dir, 0.92 + 0.08 * beat, flap);
+  }
+  for (const b of bees) {
+    const a = clamp((tt - b.show) / 1.5);
+    if (a <= 0) continue;
+    const cx = W * (0.5 + 0.34 * Math.sin(t * 0.07 + b.ph));
+    const x = cx + Math.sin(t * b.f + b.ph) * b.ax * W, y = H * b.cy + Math.sin(2 * (t * b.f + b.ph)) * b.ay * H;
+    const dir = Math.cos(t * b.f + b.ph) >= 0 ? 1 : -1;
+    const buzz = 1 + Math.sin(t * 55) * 0.035;                         // rung cánh
+    drawSprite(b.spr, x, y + Math.sin(t * 9) * 1.2, U * b.size, Math.sin(t * 3 + b.ph) * 0.12, a, dir, 1, buzz);
+  }
+  ctx.globalAlpha = 1;
+}
+
+/* ============ VÒNG LẶP ============ */
+let last = performance.now(), viewX0 = 0, viewX1 = 0;
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now; T += dt;
+  const tt = started ? T - t0 : -1;
+  // trời, nắng, mây: cố định theo màn hình
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  drawBackground(T);
+  // vườn hoa: theo camera thu phóng
+  ctx.setTransform(DPR * cam.s, 0, 0, DPR * cam.s, DPR * cam.ox, DPR * cam.oy);
+  viewX0 = -cam.ox / cam.s; viewX1 = (W - cam.ox) / cam.s;
+  ctx.fillStyle = groundG; ctx.fillRect(viewX0, H * 0.7, viewX1 - viewX0, H * 0.3 + 2);
+  for (const f of sorted) drawFlower(f, T, tt, dt);
+  drawBursts(dt);
+  drawInsects(T, tt);
+  // cánh hoa bay, bụi nắng: sát mắt người xem, không thu phóng
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  drawParticles(T, tt, dt);
+  requestAnimationFrame(frame);
+}
+
+/* ============ TƯƠNG TÁC ============ */
+function spawnBurst(x, y, pal, n) {
+  const cols = [[pal[0], pal[1]], [pal[1], pal[2]]];
+  for (let i = 0; i < n; i++) {
+    const a = Math.random() * 6.283, v = 70 + Math.random() * 130;
+    bursts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 70, rot: Math.random() * 6.283, vr: (Math.random() - 0.5) * 8, size: 5 + Math.random() * 5, life: 1.6 + Math.random() * 0.9, col: cols[i % 2] });
+  }
+}
+function touchAt(x, y) {
+  for (let i = sorted.length - 1; i >= 0; i--) {
+    const f = sorted[i];
+    if (f.hr <= 0 || (f.kind !== 'bud' && f.openP < 0.5)) continue;
+    if (Math.hypot(x - f.hx, y - f.hy) < f.hr) {
+      f.pv = 7; f.kick = 1;
+      spawnBurst(f.hx, f.hy, f.pal, f.hero ? 16 : 9);
+      for (const g of flowers) {
+        const d = Math.hypot(g.hx - f.hx, g.hy - f.hy), reach = f.hr * 2.6;
+        if (g !== f && d < reach) g.kick = Math.max(g.kick, 0.7 * (1 - d / reach));
+      }
+      if (navigator.vibrate) try { navigator.vibrate(12); } catch (e) {}
+      return;
+    }
+  }
+  for (const g of flowers) if (Math.hypot(g.hx - x, g.hy - y) < 130) g.kick = Math.max(g.kick, 0.4);
+}
+// Một ngón: chạm (khi nhấc tay mà không di chuyển) hoặc vuốt làm hoa rung.
+// Hai ngón: chụm/mở để thu phóng, kéo để di chuyển. Chuột: cuộn để thu phóng.
+const pts = new Map();
+let pinch = null, tap = null;
+const pdist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+cv.addEventListener('pointerdown', e => {
+  if (!started) return;
+  try { cv.setPointerCapture(e.pointerId); } catch (err) {}
+  pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (pts.size === 1) tap = { x: e.clientX, y: e.clientY, moved: false };
+  if (pts.size === 2) {
+    const [a, b] = [...pts.values()];
+    pinch = { d: Math.max(10, pdist(a, b)), mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2, s: cam.s, ox: cam.ox, oy: cam.oy };
+    tap = null;
+  }
+});
+cv.addEventListener('pointermove', e => {
+  if (!started || !pts.has(e.pointerId)) return;
+  pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (pinch && pts.size >= 2) {
+    const [a, b] = [...pts.values()];
+    const ns = clamp(pinch.s * pdist(a, b) / pinch.d, sMin, sMax);
+    const wx = (pinch.mx - pinch.ox) / pinch.s, wy = (pinch.my - pinch.oy) / pinch.s;
+    const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+    cam.s = ns; cam.ox = mx - wx * ns; cam.oy = my - wy * ns;
+    clampCam();
+  } else if (tap) {
+    if (Math.hypot(e.clientX - tap.x, e.clientY - tap.y) > 8) tap.moved = true;
+    if (tap.moved) {
+      const w = toWorld(e.clientX, e.clientY), r = 45 / cam.s;
+      for (const g of flowers) if (Math.hypot(g.hx - w.x, g.hy - w.y) < r) g.kick = Math.max(g.kick, 0.5);
+    }
+  }
+});
+function endPointer(e) {
+  if (!pts.has(e.pointerId)) return;
+  pts.delete(e.pointerId);
+  if (pts.size < 2) pinch = null;
+  if (pts.size === 0) {
+    if (tap && !tap.moved && e.type === 'pointerup') { const w = toWorld(tap.x, tap.y); touchAt(w.x, w.y); }
+    tap = null;
+  }
+}
+cv.addEventListener('pointerup', endPointer);
+cv.addEventListener('pointercancel', endPointer);
+cv.addEventListener('wheel', e => {
+  e.preventDefault();
+  if (!started) return;
+  zoomAt(e.clientX, e.clientY, cam.s * Math.exp(-e.deltaY * 0.0015));
+}, { passive: false });
+// chặn thu phóng cả trang của Safari để chỉ vườn hoa thu phóng
+document.addEventListener('gesturestart', e => e.preventDefault());
+
+/* ============ HƯỚNG DẪN ============ */
+const tip = $('#tip');
+let tipShown = false;
+function showTip() {
+  if (tipShown) return;
+  tipShown = true;
+  const touch = matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0;
+  tip.textContent = touch ? CONFIG.tipTouch : CONFIG.tipMouse;
+  setTimeout(() => tip.classList.add('show'), 600);
+  setTimeout(() => tip.classList.remove('show'), 6600);
+}
+
+/* ============ THƯ ============ */
+const letter = $('#letter'), reopen = $('#reopen');
+function buildLetter() {
+  $('#ltTitle').textContent = CONFIG.letter.title;
+  const body = $('#ltBody');
+  body.innerHTML = '';
+  CONFIG.letter.paragraphs.forEach((txt, i) => {
+    const p = document.createElement('p'); p.className = 'ln'; p.style.setProperty('--i', i + 1); p.textContent = txt; body.appendChild(p);
+  });
+  const sg = $('#ltSign'); sg.textContent = CONFIG.letter.sign; sg.style.setProperty('--i', CONFIG.letter.paragraphs.length + 1);
+}
+function openLetter() { letter.classList.add('open'); document.body.classList.add('letter-open'); letter.setAttribute('aria-hidden', 'false'); reopen.classList.remove('show'); }
+function closeLetter() { letter.classList.remove('open'); document.body.classList.remove('letter-open'); letter.setAttribute('aria-hidden', 'true'); reopen.classList.add('show'); showTip(); }
+$('#closeLetter').addEventListener('click', closeLetter);
+reopen.addEventListener('click', openLetter);
+letter.addEventListener('click', e => { if (e.target === letter) closeLetter(); });
+addEventListener('keydown', e => { if (e.key === 'Escape' && letter.classList.contains('open')) closeLetter(); });
+
+/* ============ NHẠC ============ */
+const muteBtn = $('#mute');
+const bgm = new Audio();
+let musicOK = !!CONFIG.musicSrc, wasPlaying = false;
+if (musicOK) { bgm.loop = true; bgm.preload = 'auto'; bgm.volume = 0.75; bgm.src = CONFIG.musicSrc; bgm.addEventListener('error', () => { musicOK = false; muteBtn.hidden = true; }); }
+function playMusic() {
+  if (!musicOK) return;
+  const p = bgm.play(); if (p && p.catch) p.catch(() => {});
+  muteBtn.hidden = false;
+}
+muteBtn.addEventListener('click', () => { bgm.muted = !bgm.muted; muteBtn.textContent = bgm.muted ? '🔇' : '🔊'; });
+document.addEventListener('visibilitychange', () => {
+  if (!musicOK) return;
+  if (document.hidden) { wasPlaying = !bgm.paused; bgm.pause(); } else if (wasPlaying) bgm.play().catch(() => {});
+});
+
+/* ============ BẮT ĐẦU ============ */
+const intro = $('#intro');
+function start() {
+  if (started || !heroSpr) return;
+  started = true; t0 = T;
+  intro.classList.add('hide');
+  playMusic();
+  setTimeout(openLetter, (bloomEnd + CONFIG.letterDelayAfterBloom / 1000) * 1000);
+}
+intro.addEventListener('click', start);
+
+/* ============ KÍCH THƯỚC ============ */
+function resize() {
+  W = innerWidth; H = innerHeight;
+  DPR = Math.min(devicePixelRatio || 1, 2);
+  U = Math.min(W, H * 0.55);
+  cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+  skyG = ctx.createLinearGradient(0, 0, 0, H);
+  skyG.addColorStop(0, '#80c4ee'); skyG.addColorStop(0.35, '#b6dff5'); skyG.addColorStop(0.62, '#e8f2ec'); skyG.addColorStop(1, '#f7ebd6');
+  groundG = ctx.createLinearGradient(0, H * 0.7, 0, H);
+  groundG.addColorStop(0, 'rgba(160,200,130,0)'); groundG.addColorStop(1, 'rgba(120,175,100,.55)');
+  if (!sprites.pink || Math.abs(U - spriteU) / spriteU > 0.06 || DPR !== spriteDPR) buildSprites();
+  setupWorld();
+  layout();
+}
+let rt;
+addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(resize, 120); });
+
+buildLetter();
+W = innerWidth; H = innerHeight; DPR = Math.min(devicePixelRatio || 1, 2); U = Math.min(W, H * 0.55);
+cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+requestAnimationFrame(() => setTimeout(() => {
+  resize(); initScene();
+  intro.classList.add('ready');
+  last = performance.now();
+  requestAnimationFrame(frame);
+}, 30));
+})();
+</script>
+</body>
+</html>
